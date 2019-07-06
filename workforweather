@@ -1,0 +1,58 @@
+import requests
+from requests import exceptions
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
+import re
+from wxpy import *
+import schedule
+import time
+
+def geturlofmusic(hash,abid):
+  path2 = 'http://www.kugou.com/yy/index.php?r=play/getdata&hash=%s&album_id=%s&_=1497972864535'
+  # 这个网址是获取音乐资源的网址，用到的hash和album_id是第一个网址获得值
+
+  url2 = path2 % (hash, abid)
+  res = requests.get(url2)
+  s = res.json()
+  # print(s)
+  return s['data']['play_url']
+
+
+def getmusic(music):
+  path1= 'http://songsearch.kugou.com/song_search_v2?keyword=%spage=1&pagesize=3&userid=-1&clientver=&platform=WebFilter&tag=em&filter=2&iscorrection=1&privilege_filter=0；'
+  # 这个网址是为了获取下个网址需要的哈希值
+  url1 = path1 % music
+  response = requests.get(url1)
+  result=response.json()
+  # print(result)
+
+
+  if(result["data"]['lists']):
+      msg= result["data"]['lists'][0]
+      # 尝试获取返回元素的第一个，资源有可能为空，因为第一个一般返回的是原唱，可能需要vip
+
+      for key in result["data"]['lists']:
+        print(key)
+      name=msg['FileName']
+
+      hash=msg['FileHash']
+      abid=msg['AlbumID']
+      mc=geturlofmusic(hash,abid)
+      if(mc):
+        mcurl=mc
+        print("第一个："+mcurl)
+      else:
+        #原唱歌手的资源没有，尝试第三个
+        msg=result["data"]['lists'][1]
+        hash = msg['FileHash']
+        abid = msg['AlbumID']
+        mc = geturlofmusic(hash, abid)
+        if (mc):
+          mcurl = mc
+          print("第三个："+mcurl)
+        else:
+          print("该音乐没有资源链接")
+  else:
+    print("找不到该音乐的hash")
+if __name__ == '__main__':
+    getmusic("告白气球")

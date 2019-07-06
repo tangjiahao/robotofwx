@@ -1,0 +1,3 @@
+[console_scripts]
+wxpy = wxpy.utils:shell_entry
+
